@@ -5,12 +5,15 @@ import it.gend.configuration.Event;
 import it.gend.configuration.ObjType;
 import it.gend.connection.JDBCConnector;
 import it.gend.domain.RecordDDL;
+import it.gend.domain.ScriptElement;
 import it.gend.domain.ScriptVersion;
 import it.gend.repository.GenerateScriptAccess;
 
 import java.sql.Connection;
 import java.sql.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Daniele Asteggiante
@@ -27,6 +30,7 @@ public class GenerateScriptDB extends AbstractCommand {
             List<RecordDDL> recordDDLs = generateScriptAccess.getRecordDDLs(connection, startDate);
             String rawScript = generateRawScript(recordDDLs);
             String scriptCleaned = generateCleanedScript(rawScript);
+            // TODO: save scriptCleaned and model a new class to save it in a file
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -36,19 +40,92 @@ public class GenerateScriptDB extends AbstractCommand {
     private String generateCleanedScript(String rawScript) {
         System.out.println("Generate Cleaned Script...");
         String[] lines = rawScript.split(Constant.recordDLLSeparator);
-        String scriptWithoutContraddiction = geenerateScriptWithoutContraddiction(lines);
-        return null;
+        String scriptWithoutContradiction = generateScriptWithoutContradiction(lines);
+        return removeSeparators(scriptWithoutContradiction);
     }
 
-    private String geenerateScriptWithoutContraddiction(String[] lines) {
-        System.out.println("Generate Script Without Contraddiction...");
-        StringBuilder script = new StringBuilder();
+    private String removeSeparators(String script) {
+        System.out.println("Remove Separators...");
+        String scriptWithoutRecordDLLSeparators = script.replace(Constant.recordDLLSeparator, "");
+        return scriptWithoutRecordDLLSeparators.replaceAll(Constant.beginClassification + ".*?" + Constant.endClassification, "");
+    }
+
+    private String generateScriptWithoutContradiction(String[] lines) {
+        System.out.println("Generate Script Without Contradiction...");
+        Map<String, ScriptElement> objectEventsMap = getStringScriptElementMap(lines);
+        Map<String, ScriptElement> objectEventsMapSorted = sortMap(objectEventsMap);
+        return objectEventsMapToString(objectEventsMapSorted);
+    }
+
+    private Map<String, ScriptElement> sortMap(Map<String, ScriptElement> objectEventsMap) {
+        System.out.println("Sort Map...");
+        for (String key : objectEventsMap.keySet()) {
+            ScriptElement scriptElement = objectEventsMap.get(key);
+            if (!Event.CREATE.equals(scriptElement.getEvent())) continue;
+            for (String key2 : objectEventsMap.keySet()) {
+                if (key.equals(key2)) continue;
+                ScriptElement scriptElement2 = objectEventsMap.get(key2);
+                if (isCalledBeforeCreation(key, scriptElement, scriptElement2)) {
+                    objectEventsMap.remove(key2);
+                    objectEventsMap.put(key, scriptElement);
+                    objectEventsMap.put(key2, scriptElement);
+                }
+            }
+        }
+        return objectEventsMap;
+    }
+
+    private boolean isCalledBeforeCreation(String key, ScriptElement scriptElement, ScriptElement scriptElement2) {
+        System.out.println("Is Called Before Creation...");
+        return scriptElement2.getLine().contains(key) && scriptElement2.getLineNumber() < scriptElement.getLineNumber();
+    }
+
+    private Map<String, ScriptElement> getStringScriptElementMap(String[] lines) {
+        Map<String, ScriptElement> objectEventsMap = new LinkedHashMap<>();
+        int lineNumber = 0;
         for (String line : lines) {
             String lineWithoutComments = removeComments(line);
             ObjType type = findSqlType(lineWithoutComments);
+            Event event = findSqlEvent(lineWithoutComments);
             String name = findName(type, lineWithoutComments);
+            addElementToMap(objectEventsMap, type, event, name, lineWithoutComments, lineNumber++);
+        }
+        return objectEventsMap;
+    }
+
+    private String objectEventsMapToString(Map<String, ScriptElement> objectEventsMap) {
+        System.out.println("Object Events Map To String...");
+        StringBuilder script = new StringBuilder();
+        for (ScriptElement scriptElement : objectEventsMap.values()) {
+            script.append(scriptElement.getLine());
         }
         return script.toString();
+    }
+
+    private void addElementToMap(Map<String, ScriptElement> objectEventsMap, ObjType type, Event event, String name, String lineWithoutComments, int lineNumber) {
+        System.out.println("Add Element To Map...");
+        if (objectEventsMap.containsKey(name)) {
+            checkContradiction(objectEventsMap, type, event, name, lineWithoutComments, lineNumber);
+            return;
+        }
+        objectEventsMap.put(name, new ScriptElement(name, type, event, lineWithoutComments, lineNumber));
+    }
+
+    private void checkContradiction(Map<String, ScriptElement> objectEventsMap, ObjType type, Event event, String name, String lineWithoutComments, int lineNumber) {
+        System.out.println("Check Contradiction...");
+        if (Event.DROP.equals(event)) {
+            objectEventsMap.remove(name);
+            return;
+        }
+        if (Event.CREATE.equals(event) && ObjType.VIEW.equals(type))
+            objectEventsMap.put(name, new ScriptElement(name, type, event, lineWithoutComments, lineNumber));
+    }
+
+    private Event findSqlEvent(String line) {
+        System.out.println("Find SQL Evenr...");
+        String classification = line.split(Constant.beginClassification)[1];
+        String[] classificationParts = classification.split(Constant.elementClassificationSeparator);
+        return Event.valueOf(classificationParts[1]);
     }
 
     private String findName(ObjType type, String lineWithoutComments) {
@@ -75,16 +152,6 @@ public class GenerateScriptDB extends AbstractCommand {
         return ObjType.valueOf(classificationParts[0]);
 
     }
-
-    private String convertToSQLAction(String objTypeStr, String eventStr) {
-        System.out.println("Convert To SQL Action...");
-        ObjType objType1 = ObjType.valueOf(objTypeStr);
-        Event event1 = Event.valueOf(eventStr);
-        if (Constant.createOrReplaceble.contains(objType1) && event1.equals(Event.CREATE))
-            return "CREATE OR REPLACE";
-        return eventStr + " " + objTypeStr;
-    }
-
 
     private String generateRawScript(List<RecordDDL> recordDDLs) {
         System.out.println("Generate Raw Script...");

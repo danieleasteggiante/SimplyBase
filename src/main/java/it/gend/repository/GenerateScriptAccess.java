@@ -66,4 +66,5 @@ public class GenerateScriptAccess {
             throw new RuntimeException(e);
         }
     }
+
 }
