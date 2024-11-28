@@ -131,6 +131,8 @@ public class MainController {
     private List<String> orderArgs(List<Arg> args) {
         List<String> list = new ArrayList<>();
         CommandsMap commandMap = CommandsMap.getCommand(args.get(0).getName());
+        if (commandMap == null)
+            throw new RuntimeException("Command not found: " + args.get(0).getName());
         for (String parameter : commandMap.getParametersAvailable()) {
             for (Arg arg : args) {
                 if (arg.getName().equals(parameter)) {
