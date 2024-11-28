@@ -35,11 +35,27 @@ public class GenerateScriptDB extends AbstractCommand {
             List<RecordDDL> recordDDLs = generateScriptAccess.getRecordDDLs(connection, startDate);
             String rawScript = generateRawScript(recordDDLs);
             String scriptCleaned = generateCleanedScript(rawScript);
-            generateScriptAccess.saveScript(connection, "-","-", scriptCleaned);
+            String software = getSoftware(args);
+            String version = getVersion(args);
+            generateScriptAccess.saveScript(connection, software, version, scriptCleaned);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String getVersion(String[] args) {
+        System.out.println("Get Version...");
+        if (Objects.isNull(args) || args.length < 2)
+            return "-";
+        return args[1];
+    }
+
+    private String getSoftware(String[] args) {
+        System.out.println("Get Software...");
+        if (Objects.isNull(args) || args.length == 0)
+            return "-";
+        return args[0];
     }
 
     private String generateCleanedScript(String rawScript) {
@@ -51,7 +67,7 @@ public class GenerateScriptDB extends AbstractCommand {
 
     private String removeSeparators(String script) {
         System.out.println("Remove Separators...");
-        String scriptWithoutRecordDLLSeparators = script.replace(Constant.recordDLLSeparator, ";");
+        String scriptWithoutRecordDLLSeparators = script.replaceAll(Constant.recordDLLSeparator, ";");
         return scriptWithoutRecordDLLSeparators.replaceAll(Constant.beginClassification + ".*?" + Constant.endClassification, "");
     }
 
@@ -103,6 +119,7 @@ public class GenerateScriptDB extends AbstractCommand {
         StringBuilder script = new StringBuilder();
         for (ScriptElement scriptElement : objectEventsMap.values()) {
             script.append(scriptElement.getLine());
+            script.append(Constant.recordDLLSeparator);
         }
         return script.toString();
     }
