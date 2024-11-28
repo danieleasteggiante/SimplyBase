@@ -67,4 +67,20 @@ public class GenerateScriptAccess {
         }
     }
 
+    public void saveScript(Connection connection, String software, String softwareVersion, String scriptCleaned) {
+        System.out.println("Save Script...");
+        PreparedStatement preparedStatement = null;
+        try {
+            preparedStatement = connection.prepareStatement(GenerateScript_QUERY.SAVE_SCRIPT_VERSION);
+            preparedStatement.setString(1, software);
+            preparedStatement.setString(2, softwareVersion);
+            preparedStatement.setDate(3, new Date(System.currentTimeMillis()));
+            preparedStatement.setString(4, scriptCleaned);
+            preparedStatement.executeUpdate();
+            connection.commit();
+        } catch (SQLException e) {
+            System.err.println("Error during script generation " + e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
 }

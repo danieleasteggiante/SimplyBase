@@ -14,6 +14,7 @@ import java.sql.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Daniele Asteggiante
@@ -21,16 +22,18 @@ import java.util.Map;
 public class GenerateScriptDB extends AbstractCommand {
     private Connection connection;
     GenerateScriptAccess generateScriptAccess;
+    private final String name = "GenerateScriptDB";
+
 
     @Override
-    public void execute() {
+    public void execute(String... args) {
         try {
             Date startDate = getStartDate();
             System.out.println("Start date: " + startDate);
             List<RecordDDL> recordDDLs = generateScriptAccess.getRecordDDLs(connection, startDate);
             String rawScript = generateRawScript(recordDDLs);
             String scriptCleaned = generateCleanedScript(rawScript);
-            // TODO: save scriptCleaned and model a new class to save it in a file
+            generateScriptAccess.saveScript(connection, "-","-", scriptCleaned);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -187,4 +190,5 @@ public class GenerateScriptDB extends AbstractCommand {
             return new Date(scriptVersion.getScriptDate().getTime());
         return new Date(System.currentTimeMillis());
     }
+
 }

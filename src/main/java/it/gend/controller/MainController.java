@@ -1,14 +1,20 @@
 package it.gend.controller;
 
 import it.gend.connection.JDBCConnector;
+import it.gend.domain.Arg;
 import it.gend.domain.command.Command;
+import it.gend.domain.command.CommandsMap;
 import it.gend.repository.CheckAccess;
 import it.gend.repository.DDL_QUERY;
 import it.gend.utils.PrintUtils;
 import it.gend.utils.PropertiesUtils;
 
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Daniele Asteggiante
@@ -25,19 +31,34 @@ public class MainController {
         loginAccess();
     }
 
-    public Command[] decode(String[] args) {
+    public Map<String, List<Arg>> decode(String[] args) {
         try {
             System.out.println("Decoding commands...");
-            Command[] commands = new Command[args.length];
+            Map<String, List<Arg>> commandsMap = new HashMap<>();
             for (int i = 0; i < args.length; i++) {
-                Command command = Class.forName("it.gend.domain.command." + args[i]).asSubclass(Command.class).newInstance();
-                commands[i] = command;
+                CommandsMap command = CommandsMap.getCommand(args[i]);
+                if (command == null) {
+                    System.err.println("Command not found: " + args[i]);
+                    throw new RuntimeException("Command not found: " + args[i]);
+                }
+                commandsMap.put(command.getCommandClassName(), new ArrayList<>());
+                while (i + 1 < args.length && !args[i + 1].startsWith("-")) {
+                    String[] arg = args[++i].split("=");
+                    if (!parameterExistInCommand(arg[0], command))
+                        throw new RuntimeException("Argument not found in command " + command.getCommandClassName() + " : " + arg[0]);
+                    commandsMap.get(command.getCommandClassName()).add(new Arg(arg[0], arg[1]));
+                    i++;
+                }
             }
-            return commands;
-        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            return commandsMap;
+        } catch (Exception e) {
             System.err.println("Error during command decoding " + e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    private boolean parameterExistInCommand(String s, CommandsMap command) {
+        return command.getParametersAvailable().contains(s);
     }
 
     public void stop() {
@@ -93,10 +114,31 @@ public class MainController {
         }
     }
 
-    public void perform(Command[] commands) {
-        System.out.println("Performing commands..." + Arrays.toString(commands));
-        for (Command command : commands) {
-            System.out.println(command);
+    public void perform(Map<String, List<Arg>> commands) {
+        try {
+            System.out.println("Performing commands...");
+            for (String command : commands.keySet()) {
+                Command commandInstance = Class.forName(command).asSubclass(Command.class).newInstance();
+                List<String> args = orderArgs(commands.get(command));
+                commandInstance.execute(args.toArray(new String[0]));
+            }
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            System.err.println("Error during command execution " + e.getMessage());
+            throw new RuntimeException(e);
         }
+    }
+
+    private List<String> orderArgs(List<Arg> args) {
+        List<String> list = new ArrayList<>();
+        CommandsMap commandMap = CommandsMap.getCommand(args.get(0).getName());
+        for (String parameter : commandMap.getParametersAvailable()) {
+            for (Arg arg : args) {
+                if (arg.getName().equals(parameter)) {
+                    list.add(arg.getValue());
+                    break;
+                }
+            }
+        }
+        return list;
     }
 }
