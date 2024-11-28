@@ -51,7 +51,7 @@ public class GenerateScriptDB extends AbstractCommand {
 
     private String removeSeparators(String script) {
         System.out.println("Remove Separators...");
-        String scriptWithoutRecordDLLSeparators = script.replace(Constant.recordDLLSeparator, "");
+        String scriptWithoutRecordDLLSeparators = script.replace(Constant.recordDLLSeparator, ";");
         return scriptWithoutRecordDLLSeparators.replaceAll(Constant.beginClassification + ".*?" + Constant.endClassification, "");
     }
 
@@ -129,13 +129,15 @@ public class GenerateScriptDB extends AbstractCommand {
     private Event findSqlEvent(String line) {
         System.out.println("Find SQL Evenr...");
         String classification = line.split(Constant.beginClassification)[1];
+        classification = classification.split(Constant.endClassification)[0];
         String[] classificationParts = classification.split(Constant.elementClassificationSeparator);
         return Event.valueOf(classificationParts[1]);
     }
 
     private String findName(ObjType type, String lineWithoutComments) {
         System.out.println("Find Name...");
-        String[] parts = lineWithoutComments.split(type.name());
+        String lineWithoutClassification = lineWithoutComments.split(Constant.endClassification)[1];
+        String[] parts = lineWithoutClassification.split(type.name() + " ");
         return parts[1].split(" ")[0];
     }
 
@@ -153,6 +155,7 @@ public class GenerateScriptDB extends AbstractCommand {
     private ObjType findSqlType(String line) {
         System.out.println("Find SQL Action...");
         String classification = line.split(Constant.beginClassification)[1];
+        classification = classification.split(Constant.endClassification)[0];
         String[] classificationParts = classification.split(Constant.elementClassificationSeparator);
         return ObjType.valueOf(classificationParts[0]);
 
@@ -171,8 +174,9 @@ public class GenerateScriptDB extends AbstractCommand {
             script.append(Constant.beginClassification)
                     .append(classification)
                     .append(Constant.endClassification)
+                    .append(recordDDL.getDdlText())
                     .append(Constant.recordDLLSeparator);
-            script.append(recordDDL.getDdlText());
+
         }
         return script.toString();
     }

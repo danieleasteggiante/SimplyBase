@@ -51,7 +51,7 @@ public interface DDL_QUERY {
             "    SELECT DB_LOCKED " +
             "    INTO locked " +
             "    FROM DDL_LOG_CONF " +
-            "    WHERE UTENTE = '" + PropertiesUtils.getProperty("db.user") + "' AND PASSWORD = '" + PropertiesUtils.getProperty("db.password") + "'; " +
+            "    WHERE UTENTE = '" + PropertiesUtils.getProperty("user").toUpperCase() + "' AND PASSWORD = '" + PropertiesUtils.getProperty("password").toUpperCase() + "'; " +
             "    IF locked = 0 THEN " +
             "        RAISE_APPLICATION_ERROR(-20001, 'Insert not allowed: condition not met in other_table.'); " +
             "    END IF; " +
