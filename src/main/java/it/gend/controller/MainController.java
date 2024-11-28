@@ -87,16 +87,22 @@ public class MainController {
     private void checkOrCreateTablesAndTriggerExists() {
         System.out.println("Checking if tables exists...");
         checkAccess = new CheckAccess();
-        boolean DDL_LOG_CONF_exists = checkAccess.findObject(connection, "DDL_LOG_CONF", DDL_QUERY.checkTableExistence);
-        if (!DDL_LOG_CONF_exists) {
-            System.out.println("Table DDL_LOG_CONF not found, creating it...");
-            checkAccess.executeDDLQuery(connection, DDL_QUERY.DDL_LOG_CONF);
-        }
         boolean DDDL_SCRIPT_VERSION_exists = checkAccess.findObject(connection, "DDL_SCRIPT_VERSION", DDL_QUERY.checkTableExistence);
         if (!DDDL_SCRIPT_VERSION_exists) {
             System.out.println("Table DDL_SCRIPT_VERSION not found, creating it...");
             checkAccess.executeDDLQuery(connection, DDL_QUERY.DDL_SCRIPT_VERSION);
         }
+        boolean DDL_INSERT_TRIGGER_exists = checkAccess.findObject(connection, "CHECK_BEFORE_INSERT_DDL", DDL_QUERY.checkTriggerExistence);
+        if (!DDL_INSERT_TRIGGER_exists) {
+            System.out.println("Trigger DDL_INSERT_TRIGGER not found, creating it...");
+            checkAccess.executeDDLQuery(connection, DDL_QUERY.DDL_INSERT_TRIGGER);
+        }
+        boolean DDL_LOG_CONF_exists = checkAccess.findObject(connection, "DDL_LOG_CONF", DDL_QUERY.checkTableExistence);
+        if (!DDL_LOG_CONF_exists) {
+            System.out.println("Table DDL_LOG_CONF not found, creating it...");
+            checkAccess.executeDDLQuery(connection, DDL_QUERY.DDL_LOG_CONF);
+        }
+
         boolean DDL_LOG_exists = checkAccess.findObject(connection, "DDL_LOG", DDL_QUERY.checkTableExistence);
         if (!DDL_LOG_exists) {
             System.out.println("Table DDL_LOG not found, creating it...");
@@ -107,11 +113,7 @@ public class MainController {
             System.out.println("Trigger DDL_TRIGGER not found, creating it...");
             checkAccess.executeDDLQuery(connection, DDL_QUERY.DDL_TRIGGER);
         }
-        boolean DDL_INSERT_TRIGGER_exists = checkAccess.findObject(connection, "CHECK_BEFORE_INSERT_DDL", DDL_QUERY.checkTriggerExistence);
-        if (!DDL_INSERT_TRIGGER_exists) {
-            System.out.println("Trigger DDL_INSERT_TRIGGER not found, creating it...");
-            checkAccess.executeDDLQuery(connection, DDL_QUERY.DDL_INSERT_TRIGGER);
-        }
+
     }
 
     public void perform(Map<String, List<Arg>> commands) {

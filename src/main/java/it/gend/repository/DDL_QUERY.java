@@ -1,5 +1,7 @@
 package it.gend.repository;
 
+import it.gend.utils.PropertiesUtils;
+
 /**
  * @author Daniele Asteggiante
  */
@@ -49,13 +51,13 @@ public interface DDL_QUERY {
             "    SELECT DB_LOCKED " +
             "    INTO locked " +
             "    FROM DDL_LOG_CONF " +
-            "    WHERE UTENTE = ? AND PASSWORD = ?" +
+            "    WHERE UTENTE = " + PropertiesUtils.getProperty("db.user") + " AND PASSWORD = " + PropertiesUtils.getProperty("db.password") +
             "    IF locked = 0 THEN " +
             "        RAISE_APPLICATION_ERROR(-20001, 'Insert not allowed: condition not met in other_table.'); " +
             "    END IF; " +
             "END ";
     String checkIfLoginFirstTime = "SELECT COUNT(*) FROM DDL_LOG_CONF";
     String checkLogin = "SELECT 1 FROM DDL_LOG_CONF WHERE UTENTE = ? AND PASSWORD = ?";
-    String insertUser = "INSERT INTO DDL_LOG_CONF (UTENTE, PASSWORD, DB_LOCKED) VALUES (?, ?, 0)";
+    String insertUser = "INSERT INTO DDL_LOG_CONF (UTENTE, PASSWORD, DB_LOCKED) VALUES (?, ?, 1)";
     String lockUnlockDB = "UPDATE DDL_LOG_CONF SET DB_LOCKED = ? WHERE UTENTE = ? AND PASSWORD = ?";
 }
