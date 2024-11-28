@@ -40,7 +40,7 @@ public interface DDL_QUERY {
             "             ora_login_user, " +
             "             stmt " +
             "         ); " +
-            "END";
+            "END;";
 
     String DDL_INSERT_TRIGGER = "CREATE OR REPLACE TRIGGER CHECK_BEFORE_INSERT_DDL " +
             "BEFORE INSERT ON DDL_SCRIPT_VERSION " +
@@ -51,11 +51,11 @@ public interface DDL_QUERY {
             "    SELECT DB_LOCKED " +
             "    INTO locked " +
             "    FROM DDL_LOG_CONF " +
-            "    WHERE UTENTE = " + PropertiesUtils.getProperty("db.user") + " AND PASSWORD = " + PropertiesUtils.getProperty("db.password") +
+            "    WHERE UTENTE = '" + PropertiesUtils.getProperty("db.user") + "' AND PASSWORD = '" + PropertiesUtils.getProperty("db.password") + "'; " +
             "    IF locked = 0 THEN " +
             "        RAISE_APPLICATION_ERROR(-20001, 'Insert not allowed: condition not met in other_table.'); " +
             "    END IF; " +
-            "END ";
+            "END; ";
     String checkIfLoginFirstTime = "SELECT COUNT(*) FROM DDL_LOG_CONF";
     String checkLogin = "SELECT 1 FROM DDL_LOG_CONF WHERE UTENTE = ? AND PASSWORD = ?";
     String insertUser = "INSERT INTO DDL_LOG_CONF (UTENTE, PASSWORD, DB_LOCKED) VALUES (?, ?, 1)";

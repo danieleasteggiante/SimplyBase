@@ -2,7 +2,6 @@ package it.gend;
 
 import it.gend.controller.MainController;
 import it.gend.domain.Arg;
-import it.gend.domain.command.Command;
 
 import java.util.List;
 import java.util.Map;
