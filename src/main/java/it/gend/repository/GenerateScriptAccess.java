@@ -46,8 +46,6 @@ public class GenerateScriptAccess {
             preparedStatement.setDate(1, startDate);
             preparedStatement.setString(2, PropertiesUtils.getProperty("db.user").toUpperCase());
             ResultSet resultSet = preparedStatement.executeQuery();
-            if (!resultSet.next())
-                return new ArrayList<>();
             List<RecordDDL> recordDDLs = new ArrayList<>();
             while (resultSet.next()) {
                 recordDDLs.add(new RecordDDL(
@@ -57,7 +55,7 @@ public class GenerateScriptAccess {
                         resultSet.getString("ORA_DICT_OBJ_NAME"),
                         resultSet.getString("ORA_DICT_OBJ_TYPE"),
                         resultSet.getString("ORA_LOGIN_USER"),
-                        resultSet.getString("DDL_TEXT_CLOB")
+                        resultSet.getString("DDL_TEXT")
                 ));
             }
             return recordDDLs;

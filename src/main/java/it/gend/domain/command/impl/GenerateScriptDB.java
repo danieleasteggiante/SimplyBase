@@ -11,6 +11,8 @@ import it.gend.repository.GenerateScriptAccess;
 
 import java.sql.Connection;
 import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -188,7 +190,9 @@ public class GenerateScriptDB extends AbstractCommand {
         ScriptVersion scriptVersion = generateScriptAccess.getLastScriptVersion(connection);
         if (scriptVersion != null)
             return new Date(scriptVersion.getScriptDate().getTime());
-        return new Date(System.currentTimeMillis());
+        LocalDate today = LocalDate.now();
+        LocalDateTime midnight = today.atStartOfDay();
+        return Date.valueOf(midnight.toLocalDate());
     }
 
 }

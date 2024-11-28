@@ -32,9 +32,18 @@ public enum CommandsMap {
         return parametersAvailable;
     }
 
-    public static CommandsMap getCommand(String commandName) {
+    public static CommandsMap getCommandFromCommandName(String commandName) {
         for (CommandsMap command : CommandsMap.values()) {
             if (command.getCommandName().equals(commandName)) {
+                return command;
+            }
+        }
+        return null;
+    }
+
+    public static CommandsMap getCommandFromCommandClassName(String commandClassName) {
+        for (CommandsMap command : CommandsMap.values()) {
+            if (command.getCommandClassName().equals(commandClassName)) {
                 return command;
             }
         }

@@ -11,7 +11,6 @@ import it.gend.utils.PropertiesUtils;
 
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,18 +35,18 @@ public class MainController {
             System.out.println("Decoding commands...");
             Map<String, List<Arg>> commandsMap = new HashMap<>();
             for (int i = 0; i < args.length; i++) {
-                CommandsMap command = CommandsMap.getCommand(args[i]);
+                CommandsMap command = CommandsMap.getCommandFromCommandName(args[i]);
                 if (command == null) {
                     System.err.println("Command not found: " + args[i]);
                     throw new RuntimeException("Command not found: " + args[i]);
                 }
                 commandsMap.put(command.getCommandClassName(), new ArrayList<>());
-                while (i + 1 < args.length && !args[i + 1].startsWith("-")) {
+                while (i + 1 < args.length && args[i + 1].startsWith("-")) {
                     String[] arg = args[++i].split("=");
-                    if (!parameterExistInCommand(arg[0], command))
+                    String argName = arg[0].replace("-", "");
+                    if (!parameterExistInCommand(argName, command))
                         throw new RuntimeException("Argument not found in command " + command.getCommandClassName() + " : " + arg[0]);
-                    commandsMap.get(command.getCommandClassName()).add(new Arg(arg[0], arg[1]));
-                    i++;
+                    commandsMap.get(command.getCommandClassName()).add(new Arg(argName, arg[1]));
                 }
             }
             return commandsMap;
@@ -120,8 +119,8 @@ public class MainController {
         try {
             System.out.println("Performing commands...");
             for (String command : commands.keySet()) {
-                Command commandInstance = Class.forName(command).asSubclass(Command.class).newInstance();
-                List<String> args = orderArgs(commands.get(command));
+                Command commandInstance = Class.forName("it.gend.domain.command.impl." +command).asSubclass(Command.class).newInstance();
+                List<String> args = orderArgs(command, commands.get(command));
                 commandInstance.execute(args.toArray(new String[0]));
             }
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
@@ -130,11 +129,13 @@ public class MainController {
         }
     }
 
-    private List<String> orderArgs(List<Arg> args) {
+    private List<String> orderArgs(String command, List<Arg> args) {
         List<String> list = new ArrayList<>();
-        CommandsMap commandMap = CommandsMap.getCommand(args.get(0).getName());
-        if (commandMap == null)
-            throw new RuntimeException("Command not found: " + args.get(0).getName());
+        CommandsMap commandMap = CommandsMap.getCommandFromCommandClassName(command);
+        if (commandMap == null) {
+            System.err.println("Command not found: " + command);
+            throw new RuntimeException("Command not found: " + command);
+        }
         for (String parameter : commandMap.getParametersAvailable()) {
             for (Arg arg : args) {
                 if (arg.getName().equals(parameter)) {
