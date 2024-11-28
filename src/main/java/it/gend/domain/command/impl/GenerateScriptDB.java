@@ -118,8 +118,9 @@ public class GenerateScriptDB extends AbstractCommand {
         System.out.println("Object Events Map To String...");
         StringBuilder script = new StringBuilder();
         for (ScriptElement scriptElement : objectEventsMap.values()) {
-            script.append(scriptElement.getLine());
-            script.append(Constant.recordDLLSeparator);
+            script.append(scriptElement.getLine())
+                    .append(Constant.recordDLLSeparator)
+                    .append("\n");
         }
         return script.toString();
     }
