@@ -140,7 +140,7 @@ public class GenerateScriptDB extends AbstractCommand {
             objectEventsMap.remove(name);
             return;
         }
-        if (Event.CREATE.equals(event) && (ObjType.VIEW.equals(type) || ObjType.TRIGGER.equals(type)))
+        if (Event.CREATE.equals(event) && (Constant.createOrReplaceble.contains(type)))
             objectEventsMap.put(name, new ScriptElement(name, type, event, lineWithoutComments, lineNumber));
     }
 
