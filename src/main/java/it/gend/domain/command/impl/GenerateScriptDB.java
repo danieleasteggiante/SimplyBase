@@ -33,6 +33,7 @@ public class GenerateScriptDB extends AbstractCommand {
             Date startDate = getStartDate();
             System.out.println("Start date: " + startDate);
             List<RecordDDL> recordDDLs = generateScriptAccess.getRecordDDLs(connection, startDate);
+            if(recordDDLs.isEmpty()) return;
             String rawScript = generateRawScript(recordDDLs);
             String scriptCleaned = generateCleanedScript(rawScript);
             String software = getSoftware(args);
