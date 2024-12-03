@@ -25,8 +25,10 @@ public class GenerateScriptAccess {
             preparedStatement.setFetchSize(1);
             preparedStatement.setFetchDirection(ResultSet.FETCH_FORWARD);
             ResultSet resultSet = preparedStatement.executeQuery();
-            if (!resultSet.next())
+            if (!resultSet.next()) {
+                System.out.println("No new script ddl found");
                 return null;
+            }
             return new ScriptVersion(
                     resultSet.getString("SOFTWARE"),
                     resultSet.getString("SOFTWARE_VERSION"),
